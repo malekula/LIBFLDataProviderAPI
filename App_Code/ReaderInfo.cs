@@ -12,4 +12,5 @@ public class ReaderInfo
     public string Name { get; set; }
     public string FatherName { get; set; }
     public DateTime DateBirth { get; set; }
+    public bool IsRemoteReader { get; set; }
 }
