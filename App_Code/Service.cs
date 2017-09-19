@@ -46,13 +46,19 @@ public class Service : System.Web.Services.WebService
     }
 
     [WebMethod(Description = "Возвращает информацию о пользователе. Если пользователь не найден или входной параметр имеет неправильный формат, генерируется исключение.")]
-    public ReaderInfo GetReaderInfo(int NumberReader)
+    public ReaderInfo GetReaderInfo(string NumberReader)
     {
+        int NumReader = 0;
+        if (!int.TryParse(NumberReader, out NumReader))
+        {
+            throw new Exception("\""+NumberReader+"\"  не является корректным номером читателя");
+        }
+
         SqlDataAdapter da = new SqlDataAdapter();
         da.SelectCommand = new SqlCommand();
         da.SelectCommand.Connection = new SqlConnection(ConfigurationManager.ConnectionStrings["ReadersConnection_OnlyRead"].ConnectionString);
         da.SelectCommand.Parameters.AddWithValue("NumberReader", NumberReader);
-        da.SelectCommand.CommandText = "select FamilyName, Name, FatherName, DateBirth from Readers..Main where NumberReader = @NumberReader";
+        da.SelectCommand.CommandText = "select FamilyName, Name, FatherName, DateBirth, TypeReader from Readers..Main where NumberReader = @NumberReader";
         DataSet ds = new DataSet();
         int cnt = da.Fill(ds);
         if (cnt == 0) throw new Exception("Читатель не найден!");
@@ -74,12 +80,12 @@ public class Service : System.Web.Services.WebService
                              " Невозможно идентифицировать. В этом случае читателя придётся попросить указать номер читательского билета в качестве логина." +
                              " \n3. \"Неверный пароль.\" Означает, что читатель найден, но введён неверный пароль.")]
 
-    public bool Authorize(string login, string password)
+    public string Authorize(string login, string password)
     {
         string CommandText = "";
         int NumberReader = 0;
         bool Check = false;
-        if (login.Length == 6 && int.TryParse(login, out NumberReader))
+        if (int.TryParse(login, out NumberReader))
         {
             CommandText = "select * from Readers..Main where NumberReader = @Login";
         } else
@@ -93,7 +99,7 @@ public class Service : System.Web.Services.WebService
                         break;
                     }
                 }
-                if (!Check)//значит 18 цифр. типа номер социалки вбил
+                if (!Check)//значит 19 цифр. типа номер социалки вбил
                 {
                     CommandText = "select * from Readers..Main where NumberSC = @Login";
                 }
@@ -118,8 +124,10 @@ public class Service : System.Web.Services.WebService
 
         string HashedPwd = HashPass(password, Salt);
 
+        string result = ds.Tables[0].Rows[0]["NumberReader"].ToString();
+
         da.SelectCommand.Parameters.Clear();
-        da.SelectCommand.Parameters.AddWithValue("NumberReader", ds.Tables[0].Rows[0]["NumberReader"].ToString());
+        da.SelectCommand.Parameters.AddWithValue("NumberReader", result);
         da.SelectCommand.Parameters.AddWithValue("Password", HashedPwd);
         da.SelectCommand.CommandText = "select * from Readers..Main where NumberReader = @NumberReader and Password = @Password ";
         ds = new DataSet();
@@ -127,9 +135,9 @@ public class Service : System.Web.Services.WebService
 
         if (cnt == 0) throw new Exception("Неверный пароль.");
 
-        return true;
+        return result;
     }
-
+    [WebMethod(Description = "Принимает пароль и соль. Возвращает хэш пароля")]
     public String HashPass(String strPassword, String strSol)
     {
         String strHashPass = String.Empty;
@@ -294,4 +302,108 @@ public class Service : System.Web.Services.WebService
         }
         return WordReg;
     }
+
+    [WebMethod(Description = "Возвращает информацию о пользователе. Если пользователь не найден или входной параметр имеет неправильный формат, генерируется исключение. ")]
+    public ReaderInfo GetUser(string login)
+    {
+        string CommandText = "";
+        int NumberReader = 0;
+        bool Check = false;
+        if (int.TryParse(login, out NumberReader))
+        {
+            CommandText = "select * from Readers..Main where NumberReader = @Login";
+        }
+        else
+            if (login.Length == 19)
+            {
+                for (int i = 0; i < 19; i++)
+                {
+                    if (!int.TryParse(login[i].ToString(), out NumberReader))
+                    {
+                        Check = true;
+                        break;
+                    }
+                }
+                if (!Check)//значит 19 цифр. типа номер социалки вбил
+                {
+                    CommandText = "select * from Readers..Main where NumberSC = @Login";
+                }
+            }
+            else //не номер, и не социалка, значит email
+            {
+                CommandText = "select * from Readers..Main where Email = @Login";
+            }
+        SqlDataAdapter da = new SqlDataAdapter();
+        da.SelectCommand = new SqlCommand();
+        da.SelectCommand.Connection = new SqlConnection(ConfigurationManager.ConnectionStrings["ReadersConnection_OnlyRead"].ConnectionString);
+        da.SelectCommand.Parameters.AddWithValue("Login", login);
+        da.SelectCommand.CommandText = CommandText;
+        DataSet ds = new DataSet();
+        int cnt = da.Fill(ds);
+        if (cnt == 0) throw new Exception("Читатель не найден!");
+        if (cnt > 1) throw new Exception("Таких Email найдено больше одного! Введите номер читателя!");
+
+        string Salt = ds.Tables[0].Rows[0]["WordReg"].ToString();
+
+        string HashedPwd = HashPass(ds.Tables[0].Rows[0]["Password"].ToString(), Salt);
+
+
+        ReaderInfo ri = new ReaderInfo();
+        ri.NumberReader = ds.Tables[0].Rows[0]["NumberReader"].ToString();
+        ri.FamilyName = ds.Tables[0].Rows[0]["FamilyName"].ToString();
+        ri.Name = ds.Tables[0].Rows[0]["Name"].ToString();
+        ri.FatherName = ds.Tables[0].Rows[0]["FatherName"].ToString();
+        ri.DateBirth = (DateTime)ds.Tables[0].Rows[0]["DateBirth"];
+        ri.IsRemoteReader = (bool)ds.Tables[0].Rows[0]["TypeReader"];
+        ri.BarCode = ds.Tables[0].Rows[0]["BarCode"].ToString();
+        ri.DateRegistration = (DateTime)ds.Tables[0].Rows[0]["DateRegistration"];
+        ri.DateReRegistration = (DateTime)ds.Tables[0].Rows[0]["DateReRegistration"];
+        ri.Email = ds.Tables[0].Rows[0]["Email"].ToString();
+        ri.HashedPassword = ds.Tables[0].Rows[0]["Password"].ToString();
+        ri.MobileTelephone = ds.Tables[0].Rows[0]["MobileTelephone"].ToString();
+        ri.Salt = ds.Tables[0].Rows[0]["WordReg"].ToString();
+        
+        try
+        {
+            ri.WorkDepartment = Convert.ToInt32(ds.Tables[0].Rows[0]["WorkDepartment"]);
+        }
+        catch
+        {
+            ri.WorkDepartment = 0;
+        }
+            
+        return ri;
+    }
+
+    [WebMethod(Description = "Вставляет пин BJVVV в корзину личного кабинета. Генерирует исключение, если есть ошибки подключения к БД." +
+                             " Если PIN пустой - генерируется исключение. Если IDSession пустой - генерируется исключение. Возвращает true если операция прошла успешно.  ")]
+    public bool INsertIntoBasket(int PIN, string IDSession)
+    {
+        if ((PIN == null) || (PIN == 0))
+        {
+            throw new Exception("PIN не может быть пустым или равняться нулю!");
+        }
+        if ((IDSession == null) || (IDSession == ""))
+        {
+            throw new Exception("IDSession не может быть пустым!");
+        }
+        SqlDataAdapter da = new SqlDataAdapter();
+        da.InsertCommand = new SqlCommand();
+        da.InsertCommand.Connection = new SqlConnection(ConfigurationManager.ConnectionStrings["ReadersConnection_Basket"].ConnectionString);
+        da.InsertCommand.Parameters.AddWithValue("PIN", PIN);
+        da.InsertCommand.Parameters.AddWithValue("IDSession", IDSession);
+        da.InsertCommand.Connection.Open();
+        da.InsertCommand.CommandText = "insert into TECHNOLOG_VVV..USERLIST (session, idbook, dt) values (@IDSession, @PIN, getdate())";
+        try
+        {
+            int cnt = da.InsertCommand.ExecuteNonQuery();
+        }
+        catch (Exception ex)
+        {
+            throw new Exception("Ничего не вставлено! " + ex.Message);
+        }
+        da.InsertCommand.Connection.Close();
+        return true;
+    }
+
 }

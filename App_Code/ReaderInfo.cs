@@ -13,4 +13,14 @@ public class ReaderInfo
     public string FatherName { get; set; }
     public DateTime DateBirth { get; set; }
     public bool IsRemoteReader { get; set; }
+    public string BarCode { get; set; }
+    public DateTime DateRegistration { get; set; }
+    public DateTime DateReRegistration { get; set; }
+    public string MobileTelephone { get; set; }
+    public string Email { get; set; }
+    public int WorkDepartment { get; set; }
+    public string HashedPassword { get; set; }
+    public string Salt { get; set; }
+    public string NumberReader { get; set; }
+
 }
