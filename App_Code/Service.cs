@@ -375,9 +375,10 @@ public class Service : System.Web.Services.WebService
         return ri;
     }
 
+    
     [WebMethod(Description = "Вставляет пин BJVVV в корзину личного кабинета. Генерирует исключение, если есть ошибки подключения к БД." +
                              " Если PIN пустой - генерируется исключение. Если IDSession пустой - генерируется исключение. Возвращает true если операция прошла успешно.  ")]
-    public bool INsertIntoBasket(int PIN, string IDSession)
+    public bool InsertIntoBasket(int PIN, string IDSession)
     {
         if ((PIN == null) || (PIN == 0))
         {
@@ -406,4 +407,43 @@ public class Service : System.Web.Services.WebService
         return true;
     }
 
+    [WebMethod(Description = "Вставляет массив пинов BJVVV в корзину личного кабинета. Генерирует исключение, если есть ошибки подключения к БД." +
+                             " Если PIN пустой - генерируется исключение. Если IDSession пустой - генерируется исключение. Возвращает true если операция прошла успешно.  ")]
+    public bool InsertArrayIntoBasket(int[] PINs, string IDSession)
+    {
+
+        if ((PINs == null) || (PINs.Length == 0))
+        {
+            throw new Exception("Массив PINs не может быть пустым или равняться нулю!");
+        }
+        if ((IDSession == null) || (IDSession == ""))
+        {
+            throw new Exception("IDSession не может быть пустым!");
+        }
+        SqlDataAdapter da = new SqlDataAdapter();
+        da.InsertCommand = new SqlCommand();
+        da.InsertCommand.Connection = new SqlConnection(ConfigurationManager.ConnectionStrings["ReadersConnection_Basket"].ConnectionString);
+        da.InsertCommand.Parameters.Add( "PIN", SqlDbType.Int);
+        da.InsertCommand.Parameters.Add( "IDSession", SqlDbType.NVarChar);
+        da.InsertCommand.Parameters["IDSession"].Value = IDSession;
+
+        da.InsertCommand.Connection.Open();
+
+        foreach (int pin in PINs)
+        {
+            da.InsertCommand.Parameters["PIN"].Value = pin;
+
+            da.InsertCommand.CommandText = "insert into TECHNOLOG_VVV..USERLIST (session, idbook, dt) values (@IDSession, @PIN, getdate())";
+            try
+            {
+                int cnt = da.InsertCommand.ExecuteNonQuery();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Запись "+pin+" не вставлена! " + ex.Message);
+            }
+        }
+        da.InsertCommand.Connection.Close();
+        return true;
+    }
 }
