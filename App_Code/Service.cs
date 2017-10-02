@@ -446,4 +446,43 @@ public class Service : System.Web.Services.WebService
         da.InsertCommand.Connection.Close();
         return true;
     }
+    [WebMethod(Description="Получает статус книги по инвентарю. Принимает IDDATA и идентификатор базы. BJVVV - основной фонд, BRIT_SOVET - фонд британского совета,"+
+                           " BJACC - Амекриканский культурный центр, BJFCC - французский культурный центр, BJSCC - Центр славянской культуры" )]
+    public string GetBookStatus(int IDDATA, string BaseName)
+    {
+        SqlDataAdapter da = new SqlDataAdapter();
+        da.SelectCommand = new SqlCommand();
+        da.SelectCommand.Connection = new SqlConnection(ConfigurationManager.ConnectionStrings["BookStatusConnection"].ConnectionString);
+        da.SelectCommand.Parameters.Add("IDDATA", SqlDbType.Int).Value = IDDATA;
+        //da.SelectCommand.Parameters["IDDATA"].Value = IDDATA;
+        da.SelectCommand.Parameters.Add("RET", SqlDbType.NVarChar, 200).Direction = ParameterDirection.Output;
+        da.SelectCommand.CommandType = CommandType.StoredProcedure;
+        switch (BaseName)
+        {
+            case "BJVVV":
+                da.SelectCommand.Parameters.Add("INV", SqlDbType.NVarChar).Value = "";
+                da.SelectCommand.CommandText = "Reservation_R.dbo.ForOPAC_MF";
+                break;
+            case "BJACC":
+                da.SelectCommand.CommandText = "Reservation_R.dbo.ForOPAC_ACC";
+                break;
+            case "BJFCC":
+                da.SelectCommand.CommandText = "Reservation_R.dbo.ForOPAC_FCC";
+                break;
+            case "BJSCC":
+                da.SelectCommand.CommandText = "Reservation_R.dbo.ForOPAC_SCC";
+                break;
+            case "BRIT_SOVET":
+                da.SelectCommand.CommandText = "Reservation_R.dbo.ForOPAC_BRIT_SOVET";
+                break;
+            default :
+                throw new Exception("неверное имя базы");
+        }
+
+        da.SelectCommand.Connection.Open();
+        da.SelectCommand.ExecuteNonQuery();
+        da.SelectCommand.Connection.Close();
+
+        return da.SelectCommand.Parameters["RET"].Value.ToString() ;
+    }
 }
