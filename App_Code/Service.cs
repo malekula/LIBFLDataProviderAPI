@@ -483,6 +483,18 @@ public class Service : System.Web.Services.WebService
         da.SelectCommand.ExecuteNonQuery();
         da.SelectCommand.Connection.Close();
 
-        return da.SelectCommand.Parameters["RET"].Value.ToString() ;
+
+        string result = da.SelectCommand.Parameters["RET"].Value.ToString().ToLower();
+
+        if (result.Contains("списано")) return "busy";
+        if (result.Contains("занято")) return "busy";
+        if (result.Contains("свободно")) return "available";
+        if (result.Contains("заказано")) return "booked";
+        if (result.Contains("бронеполка")) return "booked";
+        if (result.Contains("принят")) return "booked";
+        if (result.Contains("подготовлен")) return "available";
+
+
+        return "available";
     }
 }
