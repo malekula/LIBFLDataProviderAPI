@@ -10,6 +10,7 @@ using System.Text;
 using System.Security.Cryptography;
 using System.Globalization;
 using System.Text.RegularExpressions;
+using Newtonsoft.Json;
 
 
 
@@ -446,9 +447,9 @@ public class Service : System.Web.Services.WebService
         da.InsertCommand.Connection.Close();
         return true;
     }
-    [WebMethod(Description="Получает статус книги по инвентарю. Принимает IDDATA и идентификатор базы. BJVVV - основной фонд, BRIT_SOVET - фонд британского совета,"+
+    [WebMethod(Description="Получает статус экземпляра книги по инвентарному номеру. Принимает IDDATA и идентификатор базы. BJVVV - основной фонд, BRIT_SOVET - фонд британского совета,"+
                            " BJACC - Амекриканский культурный центр, BJFCC - французский культурный центр, BJSCC - Центр славянской культуры" )]
-    public string GetBookStatus(int IDDATA, string BaseName)
+    public string GetExemplarStatus(int IDDATA, string BaseName)
     {
         SqlDataAdapter da = new SqlDataAdapter();
         da.SelectCommand = new SqlCommand();
@@ -475,7 +476,10 @@ public class Service : System.Web.Services.WebService
             case "BRIT_SOVET":
                 da.SelectCommand.CommandText = "Reservation_R.dbo.ForOPAC_BRIT_SOVET";
                 break;
-            default :
+            case "REDKOSTJ":
+                return "available";
+                //break;
+            default:
                 throw new Exception("неверное имя базы");
         }
 
@@ -497,4 +501,133 @@ public class Service : System.Web.Services.WebService
 
         return "available";
     }
+    [WebMethod(Description = "Получает статус книги по id. Принимает строковый массив ID.")]
+    public string GetBookStatus(string[] books)
+    {
+
+        SqlDataAdapter da = new SqlDataAdapter();
+        da.SelectCommand = new SqlCommand();
+        da.SelectCommand.Connection = new SqlConnection(ConfigurationManager.ConnectionStrings["BookStatusConnection"].ConnectionString);
+
+        string[] statusArray = new string[books.Length];
+        int i = 0;
+
+        foreach (string book in books)
+        {
+            string fund = book.Substring(0, book.LastIndexOf("_"));
+            string ID = book.Substring(book.LastIndexOf("_") + 1);
+            string[] exemplars = GetExemplars(fund, ID);
+            switch (fund)
+            {
+                case "BJVVV":
+                case "BJACC":
+                case "BJFCC":
+                case "BJSCC":
+                case "BRIT_SOVET":
+                    //if (HasEbook())
+                    break;
+                case "REDKOSTJ":
+                case "PERIOD":
+                case "Pearson":
+                case "Litres":
+                    statusArray[i] = "available";
+                    continue;
+            }
+            int booked = 0;
+            int busy = 0;
+            int available = 0;
+            foreach (string exemplar in exemplars)
+            {
+                string status = GetExemplarStatus(int.Parse(exemplar), fund);
+                if (status == "available")
+                {
+                    available++;
+                    continue;
+                }
+                if (status == "busy")
+                {
+                    busy++;
+                    continue;
+                }
+                if (status == "booked")
+                {
+                    booked++;
+                    continue;
+                }
+            }
+            if (available > 0) statusArray[i] = "available";
+            else
+                if (busy == exemplars.Length) statusArray[i] = "unavailable";
+                else
+                    if (booked == exemplars.Length) statusArray[i] = "booked";
+                    else
+                        statusArray[i] = "booked";
+
+            i++;
+        }
+
+
+
+
+
+        List<SearchResultSet> res = new List<SearchResultSet>();
+        i = 0;
+        foreach (string book in books)
+        {
+            SearchResultSet item = new SearchResultSet();
+            item.id = book;
+            item.availability = statusArray[i];
+            switch (item.availability)
+            {
+                case "available":
+                    item.availability_message = @"<span class=""label label-success"">Доступно</span>";
+                    break;
+                case "unavailable":
+                    item.availability_message = @"<span class=""label label-success"">Недоступно</span>";
+                    break;
+                case "booked":
+                    item.availability_message = @"<span class=""label label-success"">Забронировано</span>";
+                    break;
+                case "unknown":
+                    item.availability_message = @"<span class=""label label-success"">Забронировано</span>";
+                    break;
+                default:
+                    item.availability_message = @"<span class=""label label-success"">Статус определить невозможно</span>";
+                    break;
+            }
+            res.Add(item);
+            i++;
+        }
+
+        string resultData = JsonConvert.SerializeObject(res, Newtonsoft.Json.Formatting.Indented);
+
+        return resultData;
+
+    }
+
+    public class SearchResultSet
+    {
+        public string id;
+        public string availability;
+        public string availability_message;
+    }
+
+    private string[] GetExemplars(string fund, string id)
+    {
+        SqlDataAdapter da = new SqlDataAdapter();
+        da.SelectCommand = new SqlCommand();
+        da.SelectCommand.Connection = new SqlConnection(ConfigurationManager.ConnectionStrings["BookStatusConnection"].ConnectionString);
+        da.SelectCommand.CommandText = "select * from "+fund+"..DATAEXT where MNFIELD = 899 and MSFIELD = '$p' and IDMAIN = "+id;
+        DataSet ds = new DataSet();
+        da.Fill(ds);
+        string[] result = new string[ds.Tables[0].Rows.Count];
+        int i = 0;
+        foreach (DataRow row in ds.Tables[0].Rows)
+        {
+            result[i++] = row["IDDATA"].ToString();
+        }
+        return result;
+    }
+
+
 }
