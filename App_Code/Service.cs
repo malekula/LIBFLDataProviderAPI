@@ -501,107 +501,96 @@ public class Service : System.Web.Services.WebService
 
         return "available";
     }
-    [WebMethod(Description = "Получает статус книги по id. Принимает строковый массив ID.")]
-    public string GetBookStatus(string[] books)
+    [WebMethod(Description = "Получает статус книги по id. Принимает ID книги из VuFind.")]
+    public string GetBookStatus(string book)
     {
 
         SqlDataAdapter da = new SqlDataAdapter();
         da.SelectCommand = new SqlCommand();
         da.SelectCommand.Connection = new SqlConnection(ConfigurationManager.ConnectionStrings["BookStatusConnection"].ConnectionString);
 
-        string[] statusArray = new string[books.Length];
-        int i = 0;
+        string result = "";
 
-        foreach (string book in books)
+        string fund = book.Substring(0, book.LastIndexOf("_"));
+        string ID = book.Substring(book.LastIndexOf("_") + 1);
+        SearchResultSet res;
+        switch (fund)
         {
-            string fund = book.Substring(0, book.LastIndexOf("_"));
-            string ID = book.Substring(book.LastIndexOf("_") + 1);
-            string[] exemplars = GetExemplars(fund, ID);
-            switch (fund)
+            case "BJVVV":
+            case "BJACC":
+            case "BJFCC":
+            case "BJSCC":
+            case "BRIT_SOVET":
+                break;
+            case "REDKOSTJ":
+            case "Pearson":
+            case "Litres":
+                result = "available";
+                res = new SearchResultSet();
+                res.id = book;
+                res.availability = result;
+                result = JsonConvert.SerializeObject(res, Newtonsoft.Json.Formatting.Indented);
+                return result;
+            case "PERIOD":
+                result = "unknown";
+                res = new SearchResultSet();
+                res.id = book;
+                res.availability = result;
+                result = JsonConvert.SerializeObject(res, Newtonsoft.Json.Formatting.Indented);
+                return result;
+            default:
+                result = "unknown";
+                res = new SearchResultSet();
+                res.id = book;
+                res.availability = result;
+                result = JsonConvert.SerializeObject(res, Newtonsoft.Json.Formatting.Indented);
+                return result;
+                
+        }
+        string[] exemplars = GetExemplars(fund, ID);
+        int booked = 0;
+        int busy = 0;
+        int available = 0;
+        int unknown = 0;
+        foreach (string exemplar in exemplars)
+        {
+            string status = GetExemplarStatus(int.Parse(exemplar), fund);
+            if (status == "available")
             {
-                case "BJVVV":
-                case "BJACC":
-                case "BJFCC":
-                case "BJSCC":
-                case "BRIT_SOVET":
-                    //if (HasEbook())
-                    break;
-                case "REDKOSTJ":
-                case "PERIOD":
-                case "Pearson":
-                case "Litres":
-                    statusArray[i] = "available";
-                    continue;
+                available++;
+                continue;
             }
-            int booked = 0;
-            int busy = 0;
-            int available = 0;
-            foreach (string exemplar in exemplars)
+            if (status == "busy")
             {
-                string status = GetExemplarStatus(int.Parse(exemplar), fund);
-                if (status == "available")
-                {
-                    available++;
-                    continue;
-                }
-                if (status == "busy")
-                {
-                    busy++;
-                    continue;
-                }
-                if (status == "booked")
-                {
-                    booked++;
-                    continue;
-                }
+                busy++;
+                continue;
             }
-            if (available > 0) statusArray[i] = "available";
+            if (status == "booked")
+            {
+                booked++;
+                continue;
+            }
+            if (status == "unknown")
+            {
+                unknown++;
+                continue;
+            }
+        }
+        if (available > 0) result = "available";
+        else
+            if (busy == exemplars.Length) result = "unavailable";
             else
-                if (busy == exemplars.Length) statusArray[i] = "unavailable";
+                if (unknown == exemplars.Length) result = "unkonown";
                 else
-                    if (booked == exemplars.Length) statusArray[i] = "booked";
+                    if (booked > 0) result = "booked";
                     else
-                        statusArray[i] = "booked";
+                        result = "unkonown";
 
-            i++;
-        }
-
-
-
-
-
-        List<SearchResultSet> res = new List<SearchResultSet>();
-        i = 0;
-        foreach (string book in books)
-        {
-            SearchResultSet item = new SearchResultSet();
-            item.id = book;
-            item.availability = statusArray[i];
-            switch (item.availability)
-            {
-                case "available":
-                    item.availability_message = @"<span class=""label label-success"">Доступно</span>";
-                    break;
-                case "unavailable":
-                    item.availability_message = @"<span class=""label label-success"">Недоступно</span>";
-                    break;
-                case "booked":
-                    item.availability_message = @"<span class=""label label-success"">Забронировано</span>";
-                    break;
-                case "unknown":
-                    item.availability_message = @"<span class=""label label-success"">Забронировано</span>";
-                    break;
-                default:
-                    item.availability_message = @"<span class=""label label-success"">Статус определить невозможно</span>";
-                    break;
-            }
-            res.Add(item);
-            i++;
-        }
-
-        string resultData = JsonConvert.SerializeObject(res, Newtonsoft.Json.Formatting.Indented);
-
-        return resultData;
+        res = new SearchResultSet();
+        res.id = book;
+        res.availability = result;
+        result = JsonConvert.SerializeObject(res, Newtonsoft.Json.Formatting.Indented);
+        return result;
 
     }
 
@@ -609,7 +598,7 @@ public class Service : System.Web.Services.WebService
     {
         public string id;
         public string availability;
-        public string availability_message;
+        //public string availability_message;
     }
 
     private string[] GetExemplars(string fund, string id)
