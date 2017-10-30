@@ -490,16 +490,21 @@ public class Service : System.Web.Services.WebService
 
         string result = da.SelectCommand.Parameters["RET"].Value.ToString().ToLower();
 
-        if (result.Contains("списано")) return "busy";
-        if (result.Contains("занято")) return "busy";
-        if (result.Contains("свободно")) return "available";
-        if (result.Contains("заказано")) return "booked";
-        if (result.Contains("бронеполка")) return "booked";
-        if (result.Contains("принят")) return "booked";
-        if (result.Contains("подготовлен")) return "available";
+        if (result.Contains("списано")) result = "busy";
+        else if (result.Contains("занято")) result = "busy";
+        else if (result.Contains("свободно")) result = "available";
+        else if (result.Contains("заказано")) result = "booked";
+        else if (result.Contains("бронеполка")) result = "booked";
+        else if (result.Contains("принят")) result = "booked";
+        else if (result.Contains("подготовлен")) result = "available";
+        else result = "available";
 
+        SearchResultSet res = new SearchResultSet();
+        res.id = IDDATA.ToString();
+        res.availability = result;
+        result = JsonConvert.SerializeObject(res, Newtonsoft.Json.Formatting.Indented);
+        return result;
 
-        return "available";
     }
     [WebMethod(Description = "Получает статус книги по id. Принимает ID книги из VuFind.")]
     public string GetBookStatus(string book)
