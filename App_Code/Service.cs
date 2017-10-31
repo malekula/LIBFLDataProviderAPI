@@ -449,8 +449,25 @@ public class Service : System.Web.Services.WebService
     }
     [WebMethod(Description="Получает статус экземпляра книги по инвентарному номеру. Принимает IDDATA и идентификатор базы. BJVVV - основной фонд, BRIT_SOVET - фонд британского совета,"+
                            " BJACC - Амекриканский культурный центр, BJFCC - французский культурный центр, BJSCC - Центр славянской культуры" )]
-    public string GetExemplarStatus(int IDDATA, string BaseName)
+    public string GetExemplarStatus(string IDDATA, string BaseName)
     {
+        SearchResultSet res = new SearchResultSet();
+        string result = "unknown";
+        if (IDDATA == string.Empty)
+        {
+            res.id = "";
+            res.availability = "unknown";
+            result = JsonConvert.SerializeObject(res, Newtonsoft.Json.Formatting.Indented);
+            return result;
+        }
+        if ((BaseName.ToLower() == "litres") || (BaseName.ToLower() == "pearson") || (IDDATA.ToLower() == "ebook"))
+        {
+            res.id = "";
+            res.availability = "available";
+            result = JsonConvert.SerializeObject(res, Newtonsoft.Json.Formatting.Indented);
+            return result;
+        }
+
         SqlDataAdapter da = new SqlDataAdapter();
         da.SelectCommand = new SqlCommand();
         da.SelectCommand.Connection = new SqlConnection(ConfigurationManager.ConnectionStrings["BookStatusConnection"].ConnectionString);
@@ -488,7 +505,7 @@ public class Service : System.Web.Services.WebService
         da.SelectCommand.Connection.Close();
 
 
-        string result = da.SelectCommand.Parameters["RET"].Value.ToString().ToLower();
+        result = da.SelectCommand.Parameters["RET"].Value.ToString().ToLower();
 
         if (result.Contains("списано")) result = "busy";
         else if (result.Contains("занято")) result = "busy";
@@ -499,7 +516,7 @@ public class Service : System.Web.Services.WebService
         else if (result.Contains("подготовлен")) result = "available";
         else result = "available";
 
-        SearchResultSet res = new SearchResultSet();
+        res = new SearchResultSet();
         res.id = IDDATA.ToString();
         res.availability = result;
         result = JsonConvert.SerializeObject(res, Newtonsoft.Json.Formatting.Indented);
@@ -516,7 +533,7 @@ public class Service : System.Web.Services.WebService
 
         string result = "";
 
-        string fund = book.Substring(0, book.LastIndexOf("_"));
+        string fund = book.Substring(0, book.LastIndexOf("_")).ToUpper();
         string ID = book.Substring(book.LastIndexOf("_") + 1);
         SearchResultSet res;
         switch (fund)
@@ -528,8 +545,8 @@ public class Service : System.Web.Services.WebService
             case "BRIT_SOVET":
                 break;
             case "REDKOSTJ":
-            case "Pearson":
-            case "Litres":
+            case "PEARSON":
+            case "LITRES":
                 result = "available";
                 res = new SearchResultSet();
                 res.id = book;
@@ -559,23 +576,23 @@ public class Service : System.Web.Services.WebService
         int unknown = 0;
         foreach (string exemplar in exemplars)
         {
-            string status = GetExemplarStatus(int.Parse(exemplar), fund);
-            if (status == "available")
+            string status = GetExemplarStatus(exemplar, fund);
+            if (status.Contains( "available" ))
             {
                 available++;
                 continue;
             }
-            if (status == "busy")
+            if (status.Contains( "busy"))
             {
                 busy++;
                 continue;
             }
-            if (status == "booked")
+            if (status.Contains("booked"))
             {
                 booked++;
                 continue;
             }
-            if (status == "unknown")
+            if (status.Contains( "unknown"))
             {
                 unknown++;
                 continue;
@@ -589,7 +606,7 @@ public class Service : System.Web.Services.WebService
                 else
                     if (booked > 0) result = "booked";
                     else
-                        result = "unkonown";
+                        result = "unknown";
 
         res = new SearchResultSet();
         res.id = book;
