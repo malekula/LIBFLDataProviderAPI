@@ -453,17 +453,17 @@ public class Service : System.Web.Services.WebService
     {
         SearchResultSet res = new SearchResultSet();
         string result = "unknown";
-        if (IDDATA == string.Empty)
+        if ((BaseName.ToLower() == "litres") || (BaseName.ToLower() == "pearson") || (IDDATA.ToLower() == "ebook"))
         {
-            res.id = "";
-            res.availability = "unknown";
+            res.id = IDDATA;
+            res.availability = "available";
             result = JsonConvert.SerializeObject(res, Newtonsoft.Json.Formatting.Indented);
             return result;
         }
-        if ((BaseName.ToLower() == "litres") || (BaseName.ToLower() == "pearson") || (IDDATA.ToLower() == "ebook"))
+        if (IDDATA == string.Empty)
         {
-            res.id = "";
-            res.availability = "available";
+            res.id = IDDATA;
+            res.availability = "unknown";
             result = JsonConvert.SerializeObject(res, Newtonsoft.Json.Formatting.Indented);
             return result;
         }
@@ -494,8 +494,10 @@ public class Service : System.Web.Services.WebService
                 da.SelectCommand.CommandText = "Reservation_R.dbo.ForOPAC_BRIT_SOVET";
                 break;
             case "REDKOSTJ":
-                return "available";
-                //break;
+                res.id = IDDATA;
+                res.availability = "available";
+                result = JsonConvert.SerializeObject(res, Newtonsoft.Json.Formatting.Indented);
+                return result;
             default:
                 throw new Exception("неверное имя базы");
         }
@@ -628,11 +630,12 @@ public class Service : System.Web.Services.WebService
         SqlDataAdapter da = new SqlDataAdapter();
         da.SelectCommand = new SqlCommand();
         da.SelectCommand.Connection = new SqlConnection(ConfigurationManager.ConnectionStrings["BookStatusConnection"].ConnectionString);
-        da.SelectCommand.CommandText = "select * from "+fund+"..DATAEXT where MNFIELD = 899 and MSFIELD = '$p' and IDMAIN = "+id;
+        da.SelectCommand.CommandText =  "select distinct IDDATA from "+fund+"..DATAEXT "+
+                                        " where ( (MNFIELD = 899 and MSFIELD = '$p') or (MNFIELD = 899 and MSFIELD = '$a') or (MNFIELD = 899 and MSFIELD = '$w') ) and IDMAIN = " + id;
         DataSet ds = new DataSet();
-        da.Fill(ds);
+        int i = da.Fill(ds);
         string[] result = new string[ds.Tables[0].Rows.Count];
-        int i = 0;
+        i = 0;
         foreach (DataRow row in ds.Tables[0].Rows)
         {
             result[i++] = row["IDDATA"].ToString();
