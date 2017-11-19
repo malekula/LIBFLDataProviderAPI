@@ -600,15 +600,15 @@ public class Service : System.Web.Services.WebService
                 continue;
             }
         }
-        if (available > 0) result = "available";
-        else
-            if (busy == exemplars.Length) result = "unavailable";
-            else
-                if (unknown == exemplars.Length) result = "unkonown";
-                else
-                    if (booked > 0) result = "booked";
-                    else
-                        result = "unknown";
+        if (exemplars.Length == 0)
+        {
+            result = "unkonown";
+        }
+        else if (available > 0) result = "available";
+            else if (busy == exemplars.Length) result = "unavailable";
+                else if (unknown == exemplars.Length) result = "unkonown";
+                    else if (booked > 0) result = "booked";
+                        else result = "unknown";
 
         res = new SearchResultSet();
         res.id = book;
