@@ -23,5 +23,9 @@ public class ReaderInfo
     public string Salt { get; set; }
     public string NumberReader { get; set; }
 
+    public string GetRights()
+    {
+        return "Бесплатный абонемент";
+    }
 }
 
