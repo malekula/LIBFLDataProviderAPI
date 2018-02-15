@@ -24,3 +24,4 @@ public class ReaderInfo
     public string NumberReader { get; set; }
 
 }
+

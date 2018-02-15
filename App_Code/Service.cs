@@ -526,7 +526,7 @@ public class Service : System.Web.Services.WebService
 
     }
     [WebMethod(Description = "Получает статус книги по id. Принимает ID книги из VuFind.")]
-    public string GetBookStatus(string book)
+    public string GetBookStatus(string id)
     {
 
         SqlDataAdapter da = new SqlDataAdapter();
@@ -535,8 +535,8 @@ public class Service : System.Web.Services.WebService
 
         string result = "";
 
-        string fund = book.Substring(0, book.LastIndexOf("_")).ToUpper();
-        string ID = book.Substring(book.LastIndexOf("_") + 1);
+        string fund = id.Substring(0, id.LastIndexOf("_")).ToUpper();
+        string ID = id.Substring(id.LastIndexOf("_") + 1);
         SearchResultSet res;
         switch (fund)
         {
@@ -551,21 +551,21 @@ public class Service : System.Web.Services.WebService
             case "LITRES":
                 result = "available";
                 res = new SearchResultSet();
-                res.id = book;
+                res.id = id;
                 res.availability = result;
                 result = JsonConvert.SerializeObject(res, Newtonsoft.Json.Formatting.Indented);
                 return result;
             case "PERIOD":
                 result = "unknown";
                 res = new SearchResultSet();
-                res.id = book;
+                res.id = id;
                 res.availability = result;
                 result = JsonConvert.SerializeObject(res, Newtonsoft.Json.Formatting.Indented);
                 return result;
             default:
                 result = "unknown";
                 res = new SearchResultSet();
-                res.id = book;
+                res.id = id;
                 res.availability = result;
                 result = JsonConvert.SerializeObject(res, Newtonsoft.Json.Formatting.Indented);
                 return result;
@@ -611,7 +611,7 @@ public class Service : System.Web.Services.WebService
                         else result = "unknown";
 
         res = new SearchResultSet();
-        res.id = book;
+        res.id = id;
         res.availability = result;
         result = JsonConvert.SerializeObject(res, Newtonsoft.Json.Formatting.Indented);
         return result;
@@ -643,5 +643,27 @@ public class Service : System.Web.Services.WebService
         return result;
     }
 
+
+    [WebMethod(Description = "Информация о книге по id книги. Принимает id книги из VuFind. (например BJVVV_123456)")]
+    public string GetBookInfoByID(string id)
+    {
+        string baseName = id.Substring(0, id.LastIndexOf("_")).ToUpper();
+        int ID = int.Parse(id.Substring(id.LastIndexOf("_") + 1));
+
+        BJBookLoader loader = new BJBookLoader(baseName);
+        BookInfo bi = loader.GetBJBookByID(ID);
+        return JsonConvert.SerializeObject(bi, Newtonsoft.Json.Formatting.Indented); ;
+    }
+
+    [WebMethod(Description = "Информация о книге по инвентарному номеру. Принимает инвентарный номер и строку с id книги из VuFind (например BJVVV_123456)")]
+    public string GetBookInfoByInvNumber(string invNumber, string id)
+    {
+        string baseName = id.Substring(0, id.LastIndexOf("_")).ToUpper();
+        int ID = int.Parse(id.Substring(id.LastIndexOf("_") + 1));
+
+        BJBookLoader loader = new BJBookLoader(baseName);
+        BookInfo bi = loader.GetBJBookByINV(invNumber);
+        return JsonConvert.SerializeObject(bi, Newtonsoft.Json.Formatting.Indented); ;
+    }
 
 }
