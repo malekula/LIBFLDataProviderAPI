@@ -48,6 +48,9 @@ public class BJBookLoader
                 case "701$a":
                     bi.Author = row["PLAIN"].ToString();
                     break;
+                case "330$a":
+                    bi.Annotation = row["PLAIN"].ToString();
+                    break;
             }
         }
         return bi;

@@ -24,7 +24,7 @@ public class BookInfo
                 result.Append(author);
                 result.Append("; ");
             }
-            return result.ToString().Remove(result.Length-2);
+            return (result.Length == 0) ? result.ToString() : result.ToString().Remove(result.Length - 2);
         }
         set
         {
@@ -32,6 +32,24 @@ public class BookInfo
         }
     }
 
+    private List<string> _annotation = new List<string>();
+    public string Annotation
+    {
+        get
+        {
+            StringBuilder result = new StringBuilder();
+            foreach (string annotation in _annotation)
+            {
+                result.Append(annotation);
+                result.Append("; ");
+            }
+            return (result.Length == 0) ? result.ToString() : result.ToString().Remove(result.Length - 2);
+        }
+        set
+        {
+            _annotation.Add(value);
+        }
+    }
     
 }
 
