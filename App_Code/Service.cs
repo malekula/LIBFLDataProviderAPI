@@ -11,6 +11,9 @@ using System.Security.Cryptography;
 using System.Globalization;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json;
+using System.Net;
+using System.IO;
+using System.Drawing;
 
 
 
@@ -655,16 +658,39 @@ public class Service : System.Web.Services.WebService
         return JsonConvert.SerializeObject(bi, Newtonsoft.Json.Formatting.Indented); ;
     }
 
-    [WebMethod(Description = "Информация о книге по инвентарному номеру. Принимает инвентарный номер и строку с id книги из VuFind (например BJVVV_123456)")]
-    public string GetBookInfoByInvNumber(string invNumber, string id)
+    [WebMethod(Description = "Информация о книге по инвентарному номеру. Принимает строку с инвентарным номером (например 123456фр) и имя базы (например BJVVV или REDKOSTJ)")]
+    public string GetBookInfoByInvNumber(string invNumber, string baseName)
     {
-        string baseName = id.Substring(0, id.LastIndexOf("_")).ToUpper();
-        int ID = int.Parse(id.Substring(id.LastIndexOf("_") + 1));
-
         BJBookLoader loader = new BJBookLoader(baseName);
         BookInfo bi = loader.GetBJBookByINV(invNumber);
         return JsonConvert.SerializeObject(bi, Newtonsoft.Json.Formatting.Indented); ;
     }
+
+    [WebMethod(Description = "Информация об электронной копии. Принимает строку с id книги из VuFind (например BJVVV_123456)")]
+    public string GetElectronicCopyInfo( string id )
+    {
+        string ip = ConfigurationManager.ConnectionStrings["IPAddressFileServer"].ConnectionString;
+        string login = ConfigurationManager.ConnectionStrings["LoginFileServer"].ConnectionString;
+        string pwd = ConfigurationManager.ConnectionStrings["PasswordFileServer"].ConnectionString;
+        string _directoryPath = @"\\" + ip + @"\BookAddInf\";
+
+        ElectronicCopyInfo result = new ElectronicCopyInfo();
+        FileInfo[] fi;
+        using (new NetworkConnection(_directoryPath, new NetworkCredential("BJStor01\\imgview", "Image_123Viewer")))
+        {
+            _directoryPath = @"\\" + ip + @"\BookAddInf\"+ElectronicCopyInfo.GetPathToElectronicCopy(id);
+            DirectoryInfo di = new DirectoryInfo(_directoryPath);
+            fi = di.GetFiles("*.jpg");
+            result.PageCount = fi.Length;
+        }
+        Image img = Image.FromFile(fi[0].FullName);
+        result.Resolution = img.Width + "X" + img.Height;
+        return JsonConvert.SerializeObject(result, Newtonsoft.Json.Formatting.Indented); 
+    }
+
+
+
+
     //================================================================================================================================================
     //================================================================================================================================================
     //================================================================================================================================================

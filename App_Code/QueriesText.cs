@@ -21,7 +21,7 @@ namespace DataProviderAPI.Queries
             {
                 return 
                         "select A.MNFIELD, A.MSFIELD , B.PLAIN from " + this._dbName + "..DATAEXT A " +
-                        "left join BJVVV..DATAEXTPLAIN B on A.ID = B.IDDATAEXT " +
+                        "left join " + this._dbName + "..DATAEXTPLAIN B on A.ID = B.IDDATAEXT " +
                         "where A.IDMAIN = @IDMAIN";
             }
         }
