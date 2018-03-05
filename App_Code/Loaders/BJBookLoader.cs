@@ -36,9 +36,15 @@ public class BJBookLoader
         da.Fill(result);
         BookInfo bi = new BookInfo();
         string fieldCode;
+        List<int> ExemplarIdDataList = new List<int>();
+        int currentIDDATA = (int)result.Rows[0]["IDDATA"];
         foreach(DataRow row in result.Rows)
         {
             fieldCode = row["MNFIELD"].ToString()+row["MSFIELD"].ToString();
+            if (((int)row["IDBLOCK"] == 260) && (currentIDDATA != (int)row["IDDATA"]))
+            {
+                ExemplarIdDataList.Add((int)row["IDDATA"]);//собираем IDDATA всех экземпляров
+            }
             switch (fieldCode)//пока только автор заглавие
             {
                 case "200$a":
@@ -46,12 +52,30 @@ public class BJBookLoader
                     break;
                 case "700$a":
                 case "701$a":
-                    bi.Author = row["PLAIN"].ToString();
+                    bi.Author.Add(row["PLAIN"].ToString());
                     break;
                 case "330$a":
-                    bi.Annotation = row["PLAIN"].ToString();
+                    bi.Annotation.Add(row["PLAIN"].ToString());
                     break;
             }
+            currentIDDATA = (int)row["IDDATA"];
+        }
+        ExemplarLoader el = new ExemplarLoader(this._baseName);
+        foreach (int iddata in ExemplarIdDataList)
+        {
+            ExemplarInfo ei = el.GetExemplarInfoByIdData(iddata);
+            bi.Exemplars.Add(ei);
+        }
+        //проверим есть ли электронный экземпляр. если есть, то добавим его. пока только так можно определить электронный экземпляр. когда они проинвентаризируются, будет создаваться сам в предыдущем цикле
+        queryText = new BJBooksQueries(this.BaseName).IS_HYPERLINK_EXISTS;
+        result = new DataTable();
+        da = new SqlDataAdapter(queryText, connectionString);
+        da.SelectCommand.Parameters.Add("IDMAIN", SqlDbType.Int).Value = iDMAIN;
+        int IsHyperlinkExists = da.Fill(result);
+        if (IsHyperlinkExists > 0)
+        {
+            ExemplarInfo elCopy = el.GetElectronicExemplarInfo(this._baseName+"_"+iDMAIN.ToString());
+            bi.Exemplars.Add(elCopy);
         }
         return bi;
     }

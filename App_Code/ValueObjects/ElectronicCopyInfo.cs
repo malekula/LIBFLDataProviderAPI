@@ -17,7 +17,10 @@ public class ElectronicCopyInfo
 
     public int PageCount { get; set; }
 
-    public string Resolution { get; set; }
+    public int Width { get; set; }
+    public int Height { get; set; }
+
+
 
     public static string GetPathToElectronicCopy(string id)//принимает ID из вуфайнда
     {
@@ -25,7 +28,7 @@ public class ElectronicCopyInfo
         string idmain = id.Substring(id.LastIndexOf("_") + 1);
         string result = "";
 
-        switch (idmain.Length)
+        switch (idmain.Length)//настроено на семизначный, но в будущем будет 9-значный айдишник
         {
             case 1:
                 result = "000000" + idmain;

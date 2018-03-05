@@ -52,27 +52,28 @@ public class Service : System.Web.Services.WebService
     [WebMethod(Description = "Возвращает информацию о пользователе. Если пользователь не найден или входной параметр имеет неправильный формат, генерируется исключение.")]
     public ReaderInfo GetReaderInfo(string NumberReader)
     {
-        int NumReader = 0;
-        if (!int.TryParse(NumberReader, out NumReader))
-        {
-            throw new Exception("\""+NumberReader+"\"  не является корректным номером читателя");
-        }
+        //int NumReader = 0;
+        //if (!int.TryParse(NumberReader, out NumReader))
+        //{
+        //    throw new Exception("\""+NumberReader+"\"  не является корректным номером читателя");
+        //}
 
-        SqlDataAdapter da = new SqlDataAdapter();
-        da.SelectCommand = new SqlCommand();
-        da.SelectCommand.Connection = new SqlConnection(ConfigurationManager.ConnectionStrings["ReadersConnection_OnlyRead"].ConnectionString);
-        da.SelectCommand.Parameters.AddWithValue("NumberReader", NumberReader);
-        da.SelectCommand.CommandText = "select FamilyName, Name, FatherName, DateBirth, TypeReader from Readers..Main where NumberReader = @NumberReader";
-        DataSet ds = new DataSet();
-        int cnt = da.Fill(ds);
-        if (cnt == 0) throw new Exception("Читатель не найден!");
-        ReaderInfo ri = new ReaderInfo();
-        ri.FamilyName = ds.Tables[0].Rows[0]["FamilyName"].ToString();
-        ri.Name = ds.Tables[0].Rows[0]["Name"].ToString();
-        ri.FatherName = ds.Tables[0].Rows[0]["FatherName"].ToString();
-        ri.DateBirth = (DateTime)ds.Tables[0].Rows[0]["DateBirth"];
-        ri.IsRemoteReader = (bool)ds.Tables[0].Rows[0]["TypeReader"];
-        return ri;
+        //SqlDataAdapter da = new SqlDataAdapter();
+        //da.SelectCommand = new SqlCommand();
+        //da.SelectCommand.Connection = new SqlConnection(ConfigurationManager.ConnectionStrings["ReadersConnection_OnlyRead"].ConnectionString);
+        //da.SelectCommand.Parameters.AddWithValue("NumberReader", NumberReader);
+        //da.SelectCommand.CommandText = "select FamilyName, Name, FatherName, DateBirth, TypeReader from Readers..Main where NumberReader = @NumberReader";
+        //DataSet ds = new DataSet();
+        //int cnt = da.Fill(ds);
+        //if (cnt == 0) throw new Exception("Читатель не найден!");
+        //ReaderInfo ri = new ReaderInfo();
+        //ri.FamilyName = ds.Tables[0].Rows[0]["FamilyName"].ToString();
+        //ri.Name = ds.Tables[0].Rows[0]["Name"].ToString();
+        //ri.FatherName = ds.Tables[0].Rows[0]["FatherName"].ToString();
+        //ri.DateBirth = (DateTime)ds.Tables[0].Rows[0]["DateBirth"];
+        //ri.IsRemoteReader = (bool)ds.Tables[0].Rows[0]["TypeReader"];
+        //return ri;
+        return this.GetUser(NumberReader);
     }
 
 
@@ -666,28 +667,8 @@ public class Service : System.Web.Services.WebService
         return JsonConvert.SerializeObject(bi, Newtonsoft.Json.Formatting.Indented); ;
     }
 
-    [WebMethod(Description = "Информация об электронной копии. Принимает строку с id книги из VuFind (например BJVVV_123456)")]
-    public string GetElectronicCopyInfo( string id )
-    {
-        string ip = ConfigurationManager.ConnectionStrings["IPAddressFileServer"].ConnectionString;
-        string login = ConfigurationManager.ConnectionStrings["LoginFileServer"].ConnectionString;
-        string pwd = ConfigurationManager.ConnectionStrings["PasswordFileServer"].ConnectionString;
-        string _directoryPath = @"\\" + ip + @"\BookAddInf\";
 
-        ElectronicCopyInfo result = new ElectronicCopyInfo();
-        FileInfo[] fi;
-        using (new NetworkConnection(_directoryPath, new NetworkCredential("BJStor01\\imgview", "Image_123Viewer")))
-        {
-            _directoryPath = @"\\" + ip + @"\BookAddInf\"+ElectronicCopyInfo.GetPathToElectronicCopy(id);
-            DirectoryInfo di = new DirectoryInfo(_directoryPath);
-            fi = di.GetFiles("*.jpg");
-            result.PageCount = fi.Length;
-        }
-        Image img = Image.FromFile(fi[0].FullName);
-        result.Resolution = img.Width + "X" + img.Height;
-        return JsonConvert.SerializeObject(result, Newtonsoft.Json.Formatting.Indented); 
-    }
-
+    
 
 
 
