@@ -6,36 +6,41 @@ using System.Text;
 using System.Runtime.Serialization;
 using Newtonsoft.Json;
 
-/// <summary>
-/// Сводное описание для BJField
-/// </summary>
 
 
-[JsonConverter(typeof(ToStringJsonConverter))]
-public class BJField
+namespace DataProviderAPI.ValueObjects
 {
-	private List<string> _valueList;
+    /// <summary>
+    /// Сводное описание для BJField
+    /// </summary>
 
-    public BJField()
-	{
-        _valueList = new List<string>();
-	}
 
-    public void Add(string value)
+    [JsonConverter(typeof(ToStringJsonConverter))]
+    public class BJField
     {
-        _valueList.Add(value);
-    }
+        private List<string> _valueList;
 
-    public override string ToString()
-    {
-        StringBuilder result = new StringBuilder();
-        foreach (string value in _valueList)
+        public BJField()
         {
-            result.Append(value);
-            result.Append("; ");
+            _valueList = new List<string>();
         }
-        return (result.Length == 0) ? result.ToString() : result.ToString().Remove(result.Length - 2);
+
+        public void Add(string value)
+        {
+            _valueList.Add(value);
+        }
+
+        public override string ToString()
+        {
+            StringBuilder result = new StringBuilder();
+            foreach (string value in _valueList)
+            {
+                result.Append(value);
+                result.Append("; ");
+            }
+            return (result.Length == 0) ? result.ToString() : result.ToString().Remove(result.Length - 2);
+
+        }
 
     }
-
 }

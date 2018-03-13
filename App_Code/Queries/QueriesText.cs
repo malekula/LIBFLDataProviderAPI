@@ -5,11 +5,11 @@ using System.Web;
 
 namespace DataProviderAPI.Queries
 {
-    public class BJBooksQueries
+    public class BJBookQueries
     {
         private string _dbName;
 
-        public BJBooksQueries(string DBName)
+        public BJBookQueries(string DBName)
         {
             this._dbName = DBName;
         }
@@ -68,7 +68,7 @@ namespace DataProviderAPI.Queries
             }
         }
     }
-    public class ReadersQueries
+    public class ReaderQueries
     {
         //public static
     }

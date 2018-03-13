@@ -8,31 +8,32 @@ using System.Runtime.Serialization;
 /// <summary>
 /// Сводное описание для BookInfo
 /// </summary>
-
-public class BookInfo
+namespace DataProviderAPI.ValueObjects
 {
-    public BookInfo()
+    public class BookInfo
     {
+        public BookInfo()
+        {
+        }
+
+        public string Title { get; set; }
+
+        //[DataMember]
+        public BJField Author = new BJField();//700a,701a
+
+
+        public BJField Annotation = new BJField();//
+
+
+
+
+        #region Экземпляры книги
+
+        public List<ExemplarInfo> Exemplars = new List<ExemplarInfo>();
+
+        #endregion
+
+
+
     }
-
-    public string Title { get; set; }
-
-    //[DataMember]
-    public BJField Author = new BJField();//700a,701a
-
-
-    public BJField Annotation = new BJField();//
-
-
-    
-    
-    #region Экземпляры книги
-
-    public List<ExemplarInfo> Exemplars = new List<ExemplarInfo>();
-
-    #endregion
-
-
-
 }
-

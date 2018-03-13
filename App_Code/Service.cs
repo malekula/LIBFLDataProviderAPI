@@ -14,6 +14,8 @@ using Newtonsoft.Json;
 using System.Net;
 using System.IO;
 using System.Drawing;
+using DataProviderAPI.ValueObjects;
+using DataProviderAPI.Loaders;
 
 
 
@@ -593,9 +595,9 @@ public class Service : System.Web.Services.WebService
                 busy++;
                 continue;
             }
-            if (status.Contains("booked"))
+            if (status.Contains("booked"))//booked считаем как unavailiable, чтобы в каталоге только два статуса было доступен/недоступен
             {
-                booked++;
+                busy++;
                 continue;
             }
             if (status.Contains( "unknown"))
