@@ -64,10 +64,10 @@ namespace DataProviderAPI.Loaders
                 }
                 currentIDDATA = (int)row["IDDATA"];
             }
-            ExemplarLoader el = new ExemplarLoader(this._baseName);
+            ExemplarLoader loader = new ExemplarLoader(this._baseName);
             foreach (int iddata in ExemplarIdDataList)
             {
-                ExemplarInfo ei = el.GetExemplarInfoByIdData(iddata);
+                ExemplarInfo ei = loader.GetExemplarInfoByIdData(iddata);
                 bi.Exemplars.Add(ei);
             }
             //проверим есть ли электронный экземпляр. если есть, то добавим его. пока только так можно определить электронный экземпляр. когда они проинвентаризируются, будет создаваться сам в предыдущем цикле
@@ -78,8 +78,10 @@ namespace DataProviderAPI.Loaders
             int IsHyperlinkExists = da.Fill(result);
             if (IsHyperlinkExists > 0)
             {
-                ExemplarInfo elCopy = el.GetElectronicExemplarInfo(this._baseName + "_" + iDMAIN.ToString());
-                bi.Exemplars.Add(elCopy);
+                ExemplarInfo ei = new ExemplarInfo(-1);//пока для всех электронных будет -1
+                ei.IsElectronicCopy = true;
+                ei.ElectronicCopyInfo = loader.GetElectronicExemplarInfo(this._baseName + "_" + iDMAIN.ToString());
+                bi.Exemplars.Add(ei);
             }
             return bi;
         }

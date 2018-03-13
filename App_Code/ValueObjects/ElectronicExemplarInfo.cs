@@ -8,21 +8,25 @@ using System.Web;
 namespace DataProviderAPI.ValueObjects
 {
     /// <summary>
-    /// Сводное описание для ElectronicCopyInfo
+    /// Сводное описание для ElectronicExemplarInfo
     /// </summary>
-    public class ElectronicCopyInfo
+
+    public class ElectronicExemplarInfo //вложим этот класс в класс ExemplarInfo и будем создавать объект, только если есть электронная копия.
     {
-        public ElectronicCopyInfo()
+        public string Path;
+        public List<string> JPGFiles = new List<string>();
+        public int CountJPG
         {
-            //
-            // TODO: добавьте логику конструктора
-            //
+            get
+            {
+                return JPGFiles.Count;
+            }
         }
+        public int WidthFirstFile;
+        public int HeightFirstFile;
+        public bool IsExistsLQ;
+        public bool IsExistsHQ;
 
-        public int PageCount { get; set; }
-
-        public int Width { get; set; }
-        public int Height { get; set; }
 
 
 

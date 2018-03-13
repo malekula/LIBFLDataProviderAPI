@@ -42,5 +42,10 @@ namespace DataProviderAPI.ValueObjects
 
         }
 
+        public int MNFIELD {get; set;}
+        public string MSFIELD { get; set; }
+
+        public string AllSynonymsFromAuthorityFile { get; set; }
+
     }
 }

@@ -7,7 +7,7 @@ using System.Web;
 namespace DataProviderAPI.ValueObjects
 {
     /// <summary>
-    /// Сводное описание для InventoryNumber
+    /// Сводное описание для ExemplarInfo
     /// </summary>
     public class ExemplarInfo
     {
@@ -39,27 +39,9 @@ namespace DataProviderAPI.ValueObjects
         public bool IsElectronicCopy = false;
 
 
-        //public Ele
-
-        public string Path;
-        public List<string> JPGFiles = new List<string>();
-        public int CountJPG
-        {
-            get
-            {
-                return JPGFiles.Count;
-            }
-        }
-        public int WidthFirstFile;
-        public int HeightFirstFile;
-         
-
-
-
+        public ElectronicExemplarInfo ElectronicCopyInfo;
 
 
     }
-    public class ElectronicExemplarInfo
-    {
-    }
+   
 }

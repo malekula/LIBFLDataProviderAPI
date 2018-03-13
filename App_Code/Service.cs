@@ -515,12 +515,12 @@ public class Service : System.Web.Services.WebService
 
         result = da.SelectCommand.Parameters["RET"].Value.ToString().ToLower();
 
-        if (result.Contains("списано")) result = "busy";
-        else if (result.Contains("занято")) result = "busy";
+        if (result.Contains("списано")) result = "unavailable";
+        else if (result.Contains("занято")) result = "unavailable";
         else if (result.Contains("свободно")) result = "available";
-        else if (result.Contains("заказано")) result = "booked";
-        else if (result.Contains("бронеполка")) result = "booked";
-        else if (result.Contains("принят")) result = "booked";
+        else if (result.Contains("заказано")) result = "unavailable";
+        else if (result.Contains("бронеполка")) result = "unavailable";
+        else if (result.Contains("принят")) result = "unavailable";
         else if (result.Contains("подготовлен")) result = "available";
         else result = "available";
 
@@ -613,7 +613,7 @@ public class Service : System.Web.Services.WebService
         else if (available > 0) result = "available";
             else if (busy == exemplars.Length) result = "unavailable";
                 else if (unknown == exemplars.Length) result = "unkonown";
-                    else if (booked > 0) result = "booked";
+                    else if (booked > 0) result = "unavailable";
                         else result = "unknown";
 
         res = new SearchResultSet();

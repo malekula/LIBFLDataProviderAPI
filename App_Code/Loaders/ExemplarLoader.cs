@@ -62,7 +62,7 @@ namespace DataProviderAPI.Loaders
             }
             return ei;
         }
-        public ExemplarInfo GetElectronicExemplarInfo(string id)
+        public ElectronicExemplarInfo GetElectronicExemplarInfo(string id)
         //временно получаем так, пока не будут проинвентаризированы электронные копии
         {
             string ip = ConfigurationManager.ConnectionStrings["IPAddressFileServer"].ConnectionString;
@@ -70,12 +70,24 @@ namespace DataProviderAPI.Loaders
             string pwd = ConfigurationManager.ConnectionStrings["PasswordFileServer"].ConnectionString;
             string _directoryPath = @"\\" + ip + @"\BookAddInf\";
 
-            ExemplarInfo result = new ExemplarInfo(-1);
+            ElectronicExemplarInfo result = new ElectronicExemplarInfo();
             FileInfo[] fi;
             using (new NetworkConnection(_directoryPath, new NetworkCredential("BJStor01\\imgview", "Image_123Viewer")))
             {
-                _directoryPath = @"\\" + ip + @"\BookAddInf\" + ElectronicCopyInfo.GetPathToElectronicCopy(id);
+                _directoryPath = @"\\" + ip + @"\BookAddInf\" + ElectronicExemplarInfo.GetPathToElectronicCopy(id);
+                
                 DirectoryInfo di = new DirectoryInfo(_directoryPath);
+                if (!di.Exists)
+                {
+                    return null;//каталога с картинками страниц не существует
+                }
+                DirectoryInfo hq = new DirectoryInfo(_directoryPath + @"\JPEG_HQ");
+                result.IsExistsHQ = (hq.Exists) ? true : false;
+
+                DirectoryInfo lq = new DirectoryInfo(_directoryPath + @"\JPEG_LQ");
+                result.IsExistsLQ = (lq.Exists) ? true : false;
+                
+                
                 fi = di.GetFiles("*.jpg");
                 foreach (FileInfo f in fi)
                 {
@@ -87,7 +99,6 @@ namespace DataProviderAPI.Loaders
             Image img = Image.FromFile(fi[0].FullName);
             result.WidthFirstFile = img.Width;
             result.HeightFirstFile = img.Height;
-            result.IsElectronicCopy = true;
             return result;
             //return JsonConvert.SerializeObject(result, Newtonsoft.Json.Formatting.Indented);
         }
