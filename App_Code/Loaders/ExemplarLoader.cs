@@ -70,7 +70,8 @@ namespace DataProviderAPI.Loaders
             string pwd = ConfigurationManager.ConnectionStrings["PasswordFileServer"].ConnectionString;
             string _directoryPath = @"\\" + ip + @"\BookAddInf\";
 
-            ElectronicExemplarInfo result = new ElectronicExemplarInfo();
+            ElectronicExemplarInfo result = new ElectronicExemplarInfo(-1);//пока что так мы создаем электронный экземпляр
+            //когда появится инвентаризация электронных копий, то сюда надо вставить получение инфы об электронной копии
             FileInfo[] fi;
             using (new NetworkConnection(_directoryPath, new NetworkCredential("BJStor01\\imgview", "Image_123Viewer")))
             {
@@ -99,6 +100,7 @@ namespace DataProviderAPI.Loaders
             Image img = Image.FromFile(fi[0].FullName);
             result.WidthFirstFile = img.Width;
             result.HeightFirstFile = img.Height;
+            result.IsElectronicCopy = true;
             return result;
             //return JsonConvert.SerializeObject(result, Newtonsoft.Json.Formatting.Indented);
         }

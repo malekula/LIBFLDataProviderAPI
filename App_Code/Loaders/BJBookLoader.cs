@@ -79,8 +79,7 @@ namespace DataProviderAPI.Loaders
             if (IsHyperlinkExists > 0)
             {
                 ExemplarInfo ei = new ExemplarInfo(-1);//пока для всех электронных будет -1
-                ei.IsElectronicCopy = true;
-                ei.ElectronicCopyInfo = loader.GetElectronicExemplarInfo(this._baseName + "_" + iDMAIN.ToString());
+                ei = loader.GetElectronicExemplarInfo(this._baseName + "_" + iDMAIN.ToString());
                 bi.Exemplars.Add(ei);
             }
             return bi;

@@ -11,8 +11,15 @@ namespace DataProviderAPI.ValueObjects
     /// Сводное описание для ElectronicExemplarInfo
     /// </summary>
 
-    public class ElectronicExemplarInfo //вложим этот класс в класс ExemplarInfo и будем создавать объект, только если есть электронная копия.
+    public class ElectronicExemplarInfo : ExemplarInfo  //наследуем этот класс от  ExemplarInfo
     {
+
+        public ElectronicExemplarInfo(int idData)
+            : base(idData)
+        {
+
+        }
+
         public string Path;
         public List<string> JPGFiles = new List<string>();
         public int CountJPG

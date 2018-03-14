@@ -39,7 +39,7 @@ namespace DataProviderAPI.ValueObjects
         public bool IsElectronicCopy = false;
 
 
-        public ElectronicExemplarInfo ElectronicCopyInfo;
+        //public ElectronicExemplarInfo ElectronicCopyInfo;
 
 
     }
